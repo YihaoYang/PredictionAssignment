@@ -1,0 +1,64 @@
+---
+title: "Prediction Assignment"
+author: "Yihao Yang"
+date: "8/9/2020"
+output: 
+  html_document: 
+    keep_md: yes
+---
+```{r}
+
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,message = FALSE,cache=TRUE)
+```
+
+## Overview
+This is a Coursera course project for Practical Machine Learning. The goal of this project is to build a model to predict the manner in which they did the exercise based on an exercise dataset. The data is from http://web.archive.org/web/20161224072740/http:/groupware.les.inf.puc-rio.br/har.
+
+## Data processing
+```{r,cache=TRUE}
+training <- read.csv("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv")
+testing <- read.csv("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv")
+```
+There are five classes of the exercises.
+```{r}
+unique(training$classe)
+```
+
+Clean up the data
+```{r}
+# remove columns containing NA 
+validCols <- !(sapply(training,anyNA) | sapply(testing,anyNA))
+training <- training[,validCols]
+testing <- testing[,validCols]
+# remove first 7 meaningless columns
+training <- training[,-c(1:7)]
+testing <- testing[,-c(1:7)]
+```
+
+
+## building a random forest classifier
+
+```{r}
+require(caret)
+require(doMC)
+doMC::registerDoMC(cores = 14)
+set.seed(55)
+control <- trainControl(method="cv", number=10)
+rfFit <- train(classe ~ ., data=training, method="rf", trControl=control)
+```
+
+
+```{r}
+rfFit
+plot(rfFit)
+```
+
+
+```{r}
+head(predict(rfFit,testing),n=20)
+```
+
+
